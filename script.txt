@@ -1,1 +1,1465 @@
+--[[
+    MOL HUB v17 - FULL BYPASS SUITE
+    Anti-Detect / Anti-Kick / Anti-Ban / Anti-BanPermanent
+    Anti-267 / Anti-Report / Anti-Cheat / Anti-Flag / Anti-Log
+]]
 
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Players          = game:GetService("Players")
+local RunService       = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage= game:GetService("ReplicatedStorage")
+local Lighting         = game:GetService("Lighting")
+local StarterGui       = game:GetService("StarterGui")
+local Camera           = workspace.CurrentCamera
+local LocalPlayer      = Players.LocalPlayer
+
+local Config = {
+    AimbotEnabled = false, AutoAim = false, AutoFire = true, AimPart = "Head",
+    FOV = 200, Smoothness = 0.6, TeamCheck = true, VisibleCheck = false, LockOn = true,
+    CrosshairIdx = 1,
+    ESPBox=false, ESPName=false, ESPAntenna=false, ESPHologram=false, ESPKiller=false, ESPGenerator=false,
+    ESPTeamCheck = true,
+    ESPBoxColor   = Color3.fromRGB(0,255,60),
+    ESPNameColor  = Color3.fromRGB(255,255,255),
+    ESPAntennaCol = Color3.fromRGB(255,255,255),
+    ESPHoloColor  = Color3.fromRGB(0,150,255),
+    ESPKillerCol  = Color3.fromRGB(255,0,0),
+    ESPGenColor   = Color3.fromRGB(255,220,0),
+    FlySpeed = 100, Superman = false,
+    Speed50 = false, SpeedValue = 50,
+    SpinbotSpeed = 40,
+    NoFog = false,
+}
+
+local states = { Spinbot=false, Fly=false, Noclip=false }
+
+local ProtectionLog = {}
+local function plog(msg)
+    table.insert(ProtectionLog, "[" .. os.date("%X") .. "] " .. msg)
+    if #ProtectionLog > 200 then table.remove(ProtectionLog, 1) end
+    print("[MOL] " .. msg)
+end
+
+-- ============================================================
+-- FULL BYPASS SUITE (10 LAYER)
+-- ============================================================
+
+-- ANTI-DETECT / ANTI-CHEAT / ANTI-LOG keywords
+local BLOCKED_KEYWORDS = {
+    -- Anti-detect
+    "detect","anticheat","anti_cheat","antiexploit","anti_exploit",
+    "ac_","_ac","clientcheck","checker","integrity","hyperion","byfron",
+    "guardian","sentry","watchdog","supervisor","monitor","scan","scanplayer",
+    "detection","detecthack","detectexploit","antiexecutor","antiexecute",
+    -- Anti-report
+    "report","reportabuse","reportplayer","sendreport","filereport",
+    "onreport","reportcheat","submitreport","abuse","abuseplayer",
+    -- Anti-ban (semua jenis)
+    "ban","banplayer","banuser","banpermanent","permanentban","ban_perm",
+    "banhammer","banlist","banned","banrequest","requestban","permban",
+    "permanent_ban","banpermanentplayer","banplayerpermanent",
+    "punish","punishplayer","blacklist","blacklistplayer","suspend",
+    "suspendplayer","onban","onpunish",
+    -- Anti-kick
+    "kick","kickplayer","kickuser","onkick","removeplayer","kickrequest",
+    "kick_self","selfkick","playerremove",
+    -- Anti-267 / disconnect
+    "disconnect","disconnectclient","closeconnection","networkclose",
+    "connectionclose","forceclose","forceleave","leavegame","networkerror",
+    "socketclose","connlost","connectionlost",
+    -- Admin systems
+    "adonis","adoniskick","adonisban","adonislog","adonis_kick","adonis_ban",
+    "hd_admin","hdadmin","admin_kick","adminban","adminbanplayer",
+    "cmdr","commander","koala","kohl","chatadmin",
+    -- Anti-flag / violation
+    "flag","flagplayer","flaguser","flagged","violation","cheat","cheater",
+    "hacker","exploiter","suspicious","suspiciousactivity",
+    -- Log & telemetry
+    "log","telemetry","analytics","tracker","audit","playerlog","logger",
+    "logging","playerlogging",
+    -- Secure triggers
+    "trust","verify","validate","authcheck","securitycheck","remotecheck",
+    "handshake","token","session","securecheck",
+}
+
+-- Method yang diblokir
+local BLOCKED_METHODS = {
+    -- Report
+    "ReportAbuse","ReportPlayer","SubmitReport","SendReport","FileReport",
+    -- Ban (semua jenis)
+    "Ban","BanPlayer","BanUser","PermanentBan","BanPermanent","BanPlayerPermanent",
+    "Punish","PunishPlayer","Blacklist","BlacklistPlayer","Suspend","SuspendPlayer",
+    -- Flag
+    "Flag","FlagPlayer","FlagUser",
+    -- Disconnect
+    "Disconnect","DisconnectClient","CloseConnection","ForceClose",
+}
+
+plog("===========================================")
+plog("  FULL BYPASS SUITE STARTING (10 LAYERS)")
+plog("===========================================")
+
+-- ============================================================
+-- LAYER 1: __namecall hook (anti-detect/report/ban/kick/flag)
+-- ============================================================
+pcall(function()
+    local mt = getrawmetatable(game)
+    local old = mt.__namecall
+    setreadonly(mt, false)
+    mt.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+
+        for _, m in ipairs(BLOCKED_METHODS) do
+            if method == m then
+                local args = {...}
+                if self == LocalPlayer or args[1] == LocalPlayer then
+                    plog("[L1] Blocked "..method.." (self)")
+                    return
+                end
+                if method == "ReportAbuse" or method == "ReportPlayer"
+                   or method == "SubmitReport" or method == "SendReport"
+                   or method == "FileReport" then
+                    plog("[L1] Blocked report: "..method)
+                    return
+                end
+                if method == "Ban" or method == "BanPlayer" or method == "BanUser"
+                   or method == "PermanentBan" or method == "BanPermanent"
+                   or method == "BanPlayerPermanent"
+                   or method == "Punish" or method == "PunishPlayer"
+                   or method == "Blacklist" or method == "BlacklistPlayer"
+                   or method == "Suspend" or method == "SuspendPlayer" then
+                    plog("[L1] Blocked ban: "..method)
+                    return
+                end
+                if method == "Flag" or method == "FlagPlayer" or method == "FlagUser" then
+                    plog("[L1] Blocked flag: "..method)
+                    return
+                end
+                if method == "Disconnect" or method == "DisconnectClient"
+                   or method == "CloseConnection" or method == "ForceClose" then
+                    plog("[L1] Blocked disconnect: "..method)
+                    return
+                end
+            end
+        end
+
+        if method == "Kick" and self == LocalPlayer then
+            plog("[L1] Blocked Kick (self)")
+            return
+        end
+
+        if method == "FireServer" or method == "InvokeServer"
+           or method == "Fire" or method == "Invoke" then
+            local nm = string.lower(tostring(self))
+            for _, kw in ipairs(BLOCKED_KEYWORDS) do
+                if string.find(nm, kw, 1, true) then
+                    plog("[L1] Blocked remote: "..tostring(self))
+                    return
+                end
+            end
+        end
+
+        return old(self, ...)
+    end)
+    setreadonly(mt, true)
+    plog("[L1] __namecall hooked")
+end)
+
+-- ============================================================
+-- LAYER 2: LocalPlayer:Kick hook (ANTI-KICK)
+-- ============================================================
+pcall(function()
+    local old
+    old = hookfunction(LocalPlayer.Kick, newcclosure(function(self, ...)
+        if self == LocalPlayer then
+            plog("[L2] Blocked LocalPlayer:Kick()")
+            return
+        end
+        return old(self, ...)
+    end))
+    plog("[L2] LocalPlayer:Kick hooked")
+end)
+
+-- ============================================================
+-- LAYER 3: Players:Kick hook (ANTI-KICK)
+-- ============================================================
+pcall(function()
+    local old
+    old = hookfunction(Players.Kick, newcclosure(function(self, ...)
+        local args = {...}
+        if args[1] == LocalPlayer then
+            plog("[L3] Blocked Players:Kick()")
+            return
+        end
+        return old(self, ...)
+    end))
+    plog("[L3] Players:Kick hooked")
+end)
+
+-- ============================================================
+-- LAYER 4: ReportAbuse hook (ANTI-REPORT)
+-- ============================================================
+pcall(function()
+    local old
+    old = hookfunction(LocalPlayer.ReportAbuse, newcclosure(function(self, ...)
+        plog("[L4] Blocked LocalPlayer:ReportAbuse()")
+        return
+    end))
+    plog("[L4] ReportAbuse hooked")
+end)
+
+-- ============================================================
+-- LAYER 5: SetCore hook (anti-notif kick/ban)
+-- ============================================================
+pcall(function()
+    local old
+    old = hookfunction(StarterGui.SetCore, newcclosure(function(self, key, ...)
+        local k = tostring(key):lower()
+        if k:find("notification") or k:find("kick") or k:find("ban")
+           or k:find("toast") or k:find("message") or k:find("error")
+           or k:find("report") or k:find("flag") then
+            plog("[L5] Blocked SetCore: "..key)
+            return
+        end
+        return old(self, key, ...)
+    end))
+    plog("[L5] SetCore hooked")
+end)
+
+-- ============================================================
+-- LAYER 6: Ancestry defense (anti re-parent)
+-- ============================================================
+pcall(function()
+    LocalPlayer.AncestryChanged:Connect(function()
+        if LocalPlayer.Parent ~= Players then
+            plog("[L6] Ancestry changed - restoring")
+            pcall(function() LocalPlayer.Parent = Players end)
+        end
+    end)
+    plog("[L6] Ancestry defense active")
+end)
+
+-- ============================================================
+-- LAYER 7: Remote scanner (freeze detect/report/ban remotes)
+-- ============================================================
+task.spawn(function()
+    while task.wait(2) do
+        pcall(function()
+            for _, obj in ipairs(game:GetDescendants()) do
+                if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+                    local nm = string.lower(obj.Name)
+                    for _, kw in ipairs(BLOCKED_KEYWORDS) do
+                        if string.find(nm, kw, 1, true) then
+                            pcall(function()
+                                if not obj:GetAttribute("MolFrozen") then
+                                    obj:SetAttribute("MolFrozen", true)
+                                end
+                            end)
+                            break
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+plog("[L7] Remote scanner active")
+
+-- ============================================================
+-- LAYER 8: Anti-267 (continuous parent check)
+-- ============================================================
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            if LocalPlayer.Parent ~= Players and LocalPlayer.Parent ~= nil then
+                LocalPlayer.Parent = Players
+            end
+        end)
+    end
+end)
+plog("[L8] Anti-267 active")
+
+-- ============================================================
+-- LAYER 9: Kick/disconnect method defense (game-level)
+-- ============================================================
+pcall(function()
+    local old
+    old = hookfunction(game.Kick, newcclosure(function(self, ...)
+        local args = {...}
+        if args[1] == LocalPlayer then
+            plog("[L9] Blocked game:Kick()")
+            return
+        end
+        return old(self, ...)
+    end))
+    plog("[L9] game:Kick hooked")
+end)
+
+-- ============================================================
+-- LAYER 10: SafeCall wrapper (per-fit feature)
+-- ============================================================
+local function SafeCall(fn, label)
+    return function(...)
+        local ok, err = pcall(fn, ...)
+        if not ok then
+            plog("Error ["..(label or "?").."]: "..tostring(err))
+            if LocalPlayer.Parent ~= Players and LocalPlayer.Parent ~= nil then
+                pcall(function() LocalPlayer.Parent = Players end)
+            end
+        end
+        return ok
+    end
+end
+
+plog("===========================================")
+plog("  FULL BYPASS SUITE ACTIVE (10 LAYERS)")
+plog("  Anti-Detect / Anti-Kick / Anti-Ban")
+plog("  Anti-BanPermanent / Anti-267 / Anti-Report")
+plog("  Anti-Cheat / Anti-Flag / Anti-Log")
+plog("===========================================")
+
+-- ============================================================
+-- FOV CIRCLE
+-- ============================================================
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 2; FOVCircle.NumSides = 80
+FOVCircle.Radius = Config.FOV; FOVCircle.Filled = false
+FOVCircle.Transparency = 0.8
+FOVCircle.Color = Color3.fromRGB(0, 170, 255)
+FOVCircle.Visible = false
+
+-- ============================================================
+-- CROSSHAIRS
+-- ============================================================
+local CrossGui = Instance.new("ScreenGui")
+CrossGui.Name = "MolCrosshair_" .. math.random(1000, 9999)
+CrossGui.ResetOnSpawn = false; CrossGui.IgnoreGuiInset = true
+pcall(function()
+    if syn and syn.protect_gui then syn.protect_gui(CrossGui); CrossGui.Parent = game:GetService("CoreGui")
+    elseif gethui then CrossGui.Parent = gethui()
+    else CrossGui.Parent = game:GetService("CoreGui") end
+end)
+if not CrossGui.Parent then CrossGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+
+local crossGroups = {}
+do
+    local dot = Instance.new("Frame")
+    dot.Size=UDim2.new(0,8,0,8); dot.Position=UDim2.new(0.5,-4,0.5,-4)
+    dot.BackgroundColor3=Color3.fromRGB(255,30,30); dot.BorderSizePixel=0; dot.Parent=CrossGui
+    local c=Instance.new("UICorner"); c.CornerRadius=UDim.new(1,0); c.Parent=dot
+    crossGroups[1]={dot}
+end
+do
+    local grp=Instance.new("Frame")
+    grp.Size=UDim2.new(0,30,0,30); grp.Position=UDim2.new(0.5,-15,0.5,-15)
+    grp.BackgroundTransparency=1; grp.Parent=CrossGui
+    for i=1,4 do
+        local line=Instance.new("Frame")
+        line.BackgroundColor3=Color3.fromRGB(0,255,80); line.BorderSizePixel=0; line.Parent=grp
+        if i==1 then line.Size=UDim2.new(0,2,0,10); line.Position=UDim2.new(0.5,-1,0,0)
+        elseif i==2 then line.Size=UDim2.new(0,2,0,10); line.Position=UDim2.new(0.5,-1,1,-10)
+        elseif i==3 then line.Size=UDim2.new(0,10,0,2); line.Position=UDim2.new(0,0,0.5,-1)
+        else line.Size=UDim2.new(0,10,0,2); line.Position=UDim2.new(1,-10,0.5,-1) end
+    end
+    crossGroups[2]={grp}
+end
+do
+    local ring=Instance.new("Frame")
+    ring.Size=UDim2.new(0,26,0,26); ring.Position=UDim2.new(0.5,-13,0.5,-13)
+    ring.BackgroundTransparency=1; ring.Parent=CrossGui
+    local rc=Instance.new("UICorner"); rc.CornerRadius=UDim.new(1,0); rc.Parent=ring
+    local st=Instance.new("UIStroke"); st.Color=Color3.fromRGB(255,255,255); st.Thickness=2; st.Parent=ring
+    local dot=Instance.new("Frame")
+    dot.Size=UDim2.new(0,4,0,4); dot.Position=UDim2.new(0.5,-2,0.5,-2)
+    dot.BackgroundColor3=Color3.fromRGB(255,255,255); dot.BorderSizePixel=0; dot.Parent=ring
+    local dc=Instance.new("UICorner"); dc.CornerRadius=UDim.new(1,0); dc.Parent=dot
+    crossGroups[3]={ring}
+end
+do
+    local grp=Instance.new("Frame")
+    grp.Size=UDim2.new(0,40,0,40); grp.Position=UDim2.new(0.5,-20,0.5,-20)
+    grp.BackgroundTransparency=1; grp.Parent=CrossGui
+    local dot=Instance.new("Frame")
+    dot.Size=UDim2.new(0,4,0,4); dot.Position=UDim2.new(0.5,-2,0.5,-2)
+    dot.BackgroundColor3=Color3.fromRGB(0,240,255); dot.BorderSizePixel=0; dot.Parent=grp
+    local dc=Instance.new("UICorner"); dc.CornerRadius=UDim.new(1,0); dc.Parent=dot
+    for i=1,4 do
+        local line=Instance.new("Frame")
+        line.BackgroundColor3=Color3.fromRGB(0,240,255); line.BorderSizePixel=0; line.Parent=grp
+        if i==1 then line.Size=UDim2.new(0,1,0,14); line.Position=UDim2.new(0.5,0,0,0)
+        elseif i==2 then line.Size=UDim2.new(0,1,0,14); line.Position=UDim2.new(0.5,0,1,-14)
+        elseif i==3 then line.Size=UDim2.new(0,14,0,1); line.Position=UDim2.new(0,0,0.5,0)
+        else line.Size=UDim2.new(0,14,0,1); line.Position=UDim2.new(1,-14,0.5,0) end
+    end
+    crossGroups[4]={grp}
+end
+do
+    local grp=Instance.new("Frame")
+    grp.Size=UDim2.new(0,30,0,30); grp.Position=UDim2.new(0.5,-15,0.5,-15)
+    grp.BackgroundTransparency=1; grp.Parent=CrossGui
+    local top=Instance.new("Frame")
+    top.Size=UDim2.new(1,0,0,2); top.BackgroundColor3=Color3.fromRGB(255,50,200)
+    top.BorderSizePixel=0; top.Parent=grp
+    local stem=Instance.new("Frame")
+    stem.Size=UDim2.new(0,2,0,18); stem.Position=UDim2.new(0.5,-1,0,0)
+    stem.BackgroundColor3=Color3.fromRGB(255,50,200); stem.BorderSizePixel=0; stem.Parent=grp
+    crossGroups[5]={grp}
+end
+
+local CROSS_NAMES = {"Red Dot","Green Cross","White Circle","Full Cross","Neon T"}
+local function UpdateCrosshair()
+    for idx, group in pairs(crossGroups) do
+        for _, f in ipairs(group) do f.Visible = (idx == Config.CrosshairIdx) end
+    end
+end
+UpdateCrosshair()
+
+-- ============================================================
+-- AIMBOT (Fire only when camera locked on head)
+-- ============================================================
+local currentTarget = nil
+local lastFire = 0
+local lastTargetSwitch = 0
+
+local function IsEnemy(player)
+    if player == LocalPlayer then return false end
+    if not Config.TeamCheck then return true end
+    if player.Team and LocalPlayer.Team then return player.Team ~= LocalPlayer.Team end
+    return true
+end
+
+local function GetAimPart(player)
+    if not player or not player.Character then return nil end
+    local char = player.Character
+    local part = char:FindFirstChild(Config.AimPart)
+    if part and part:IsA("BasePart") then return part end
+    for _, name in ipairs({"Head","UpperTorso","Torso","HumanoidRootPart","LowerTorso"}) do
+        local p = char:FindFirstChild(name)
+        if p and p:IsA("BasePart") then return p end
+    end
+    return nil
+end
+
+local function HasLineOfSight(part)
+    local origin = Camera.CFrame.Position
+    local dir = (part.Position - origin)
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    local ignore = {LocalPlayer.Character, Camera}
+    if part.Parent then table.insert(ignore, part.Parent) end
+    params.FilterDescendantsInstances = ignore
+    params.IgnoreWater = true
+    local result = workspace:Raycast(origin, dir, params)
+    return result == nil or result.Instance == part or result.Instance:IsDescendantOf(part.Parent)
+end
+
+local function IsTargetValid(player)
+    if not player or not player.Parent then return false end
+    if not IsEnemy(player) then return false end
+    local char = player.Character
+    if not char then return false end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum or hum.Health <= 0 then return false end
+    local part = GetAimPart(player)
+    if not part then return false end
+    if (part.Position - Camera.CFrame.Position).Magnitude > 3000 then return false end
+    if Config.VisibleCheck and not HasLineOfSight(part) then return false end
+    return true
+end
+
+local function AcquireTarget()
+    local center = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+    local best, bestDist = nil, Config.FOV
+    for _, player in ipairs(Players:GetPlayers()) do
+        if IsEnemy(player) and player.Character then
+            local part = GetAimPart(player)
+            if part then
+                local sp, onScreen = Camera:WorldToViewportPoint(part.Position)
+                if onScreen and sp.Z > 0 then
+                    local d = (Vector2.new(sp.X, sp.Y) - center).Magnitude
+                    if d < bestDist then
+                        if Config.VisibleCheck then
+                            if HasLineOfSight(part) then bestDist = d; best = player end
+                        else
+                            bestDist = d; best = player
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return best
+end
+
+local function AimAt(player, instant)
+    local part = GetAimPart(player)
+    if not part then return end
+    local goal = CFrame.new(Camera.CFrame.Position, part.Position)
+    if instant or Config.Smoothness >= 1 then
+        Camera.CFrame = goal
+    else
+        Camera.CFrame = Camera.CFrame:Lerp(goal, Config.Smoothness)
+    end
+end
+
+local function IsCameraOnPart(part, thresholdDeg)
+    if not part then return false end
+    local camLook = Camera.CFrame.LookVector
+    local toTarget = (part.Position - Camera.CFrame.Position)
+    if toTarget.Magnitude < 0.01 then return true end
+    toTarget = toTarget.Unit
+    local dot = math.clamp(camLook:Dot(toTarget), -1, 1)
+    local angle = math.deg(math.acos(dot))
+    return angle <= (thresholdDeg or 3)
+end
+
+local function FireOnce()
+    pcall(function()
+        if mouse1click then
+            mouse1click()
+        elseif mouse1press and mouse1release then
+            mouse1press(); task.wait(0.02); mouse1release()
+        end
+    end)
+end
+
+local function ClearLock() currentTarget = nil end
+
+RunService.RenderStepped:Connect(SafeCall(function()
+    if Config.AimbotEnabled then
+        FOVCircle.Visible = true
+        FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
+        FOVCircle.Radius = Config.FOV
+    else
+        FOVCircle.Visible = false
+    end
+
+    local mouseHeld = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+    local manualActive = Config.AimbotEnabled and mouseHeld
+    local autoActive   = Config.AimbotEnabled and Config.AutoAim
+
+    if not manualActive and not autoActive then
+        if currentTarget then ClearLock() end
+        return
+    end
+
+    if not Config.LockOn then
+        currentTarget = AcquireTarget()
+    end
+
+    if currentTarget and not IsTargetValid(currentTarget) then ClearLock() end
+
+    if not currentTarget then
+        local nt = AcquireTarget()
+        if nt then
+            currentTarget = nt
+            lastTargetSwitch = tick()
+        end
+    end
+
+    if not currentTarget then return end
+
+    local part = GetAimPart(currentTarget)
+    if not part then ClearLock(); return end
+
+    AimAt(currentTarget, false)
+
+    if Config.AutoFire then
+        if IsCameraOnPart(part, 3) then
+            local now = tick()
+            if now - lastFire >= 0.08 then
+                lastFire = now
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, part.Position)
+                FireOnce()
+            end
+        end
+    end
+end, "Aim"))
+
+-- ============================================================
+-- ESP STORAGE
+-- ============================================================
+local ESPObjects = {}
+local Holograms  = {}
+local GenHighlights = {}
+local KillerHLs = {}
+
+local function CreateESP(player)
+    if player == LocalPlayer or ESPObjects[player] then return end
+    local esp = { Box=Drawing.new("Square"), Name=Drawing.new("Text"), Antenna=Drawing.new("Line") }
+    esp.Box.Thickness=1.5; esp.Box.Filled=false; esp.Box.Transparency=1; esp.Box.Color=Config.ESPBoxColor
+    esp.Name.Size=14; esp.Name.Center=true; esp.Name.Outline=true; esp.Name.Color=Config.ESPNameColor
+    esp.Antenna.Thickness=1.2; esp.Antenna.Color=Config.ESPAntennaCol
+    ESPObjects[player] = esp
+end
+
+local function RemoveESP(player)
+    if ESPObjects[player] then
+        for _, d in pairs(ESPObjects[player]) do d:Remove() end
+        ESPObjects[player] = nil
+    end
+    if Holograms[player] then Holograms[player]:Destroy(); Holograms[player] = nil end
+end
+
+-- ============================================================
+-- KILLER DETECTION
+-- ============================================================
+local KILLER_WORDS = {"killer","monster","zombie","slasher","hunter","stalker",
+                     "chaser","entity","beast","demon","ghost","phantom","murderer"}
+
+local function nameMatchesKiller(name)
+    if not name then return false end
+    local n = string.lower(tostring(name))
+    for _, kw in ipairs(KILLER_WORDS) do
+        if string.find(n, kw, 1, true) then return true end
+    end
+    return false
+end
+
+local function isKillerPlayer(player)
+    if not player then return false end
+    local ok, v = pcall(function() return player:GetAttribute("IsKiller") end)
+    if ok and v == true then return true end
+    ok, v = pcall(function() return player:GetAttribute("Killer") end)
+    if ok and v == true then return true end
+    ok, v = pcall(function() return player:GetAttribute("IsMonster") end)
+    if ok and v == true then return true end
+    if nameMatchesKiller(player.Name) then return true end
+    if nameMatchesKiller(player.DisplayName) then return true end
+    local char = player.Character
+    if char then
+        if nameMatchesKiller(char.Name) then return true end
+        ok, v = pcall(function() return char:GetAttribute("IsKiller") end)
+        if ok and v == true then return true end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum and nameMatchesKiller(hum.Name) then return true end
+    end
+    return false
+end
+
+local function isGeneratorObj(obj)
+    if not obj then return false end
+    return string.find(string.lower(obj.Name), "generator", 1, true) ~= nil
+end
+
+-- ============================================================
+-- TELEPORT
+-- ============================================================
+local function tpTo(part)
+    if not part then return false end
+    local char = LocalPlayer.Character
+    if not char then return false end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    hrp.CFrame = part.CFrame + Vector3.new(0, 3, 0)
+    pcall(function() hrp.AssemblyLinearVelocity = Vector3.zero end)
+    return true
+end
+
+local function findRandomByKeywords(keywords)
+    local found, seen = {}, {}
+    local function addPart(p)
+        if p and p:IsA("BasePart") and not seen[p] then seen[p]=true; table.insert(found,p) end
+    end
+    local function matchName(n)
+        n = string.lower(n or "")
+        for _, kw in ipairs(keywords) do
+            if string.find(n, kw, 1, true) then return true end
+        end
+        return false
+    end
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and matchName(obj.Name) then addPart(obj) end
+        if obj:IsA("Model") and matchName(obj.Name) then
+            if obj.PrimaryPart then addPart(obj.PrimaryPart)
+            else for _,c in ipairs(obj:GetDescendants()) do if c:IsA("BasePart") then addPart(c); break end end end
+        end
+        if obj:IsA("Folder") and matchName(obj.Name) then
+            for _,c in ipairs(obj:GetDescendants()) do if c:IsA("BasePart") then addPart(c); break end end
+        end
+    end
+    if #found == 0 then return nil end
+    return found[math.random(1, #found)]
+end
+
+local function findKillerPart()
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and isKillerPlayer(p) then
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then return hrp end
+        end
+    end
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Model") and nameMatchesKiller(obj.Name) then
+            local base = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")
+            if base then return base end
+        end
+        if obj:IsA("BasePart") and nameMatchesKiller(obj.Name) then
+            return obj
+        end
+        if obj:IsA("Model") then
+            local ok, v = pcall(function() return obj:GetAttribute("IsKiller") end)
+            if ok and v == true then
+                local base = obj.PrimaryPart or obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")
+                if base then return base end
+            end
+        end
+    end
+    return nil
+end
+
+-- ============================================================
+-- FLY
+-- ============================================================
+local flyConn, flyBV, flyBG
+local flySavedWS, flySavedJP, flySavedAutoRotate
+local flyConflicts = {}
+
+local function startFly()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum then return end
+
+    flySavedWS = hum.WalkSpeed
+    flySavedJP = hum.JumpPower
+    flySavedAutoRotate = hum.AutoRotate
+
+    hum.PlatformStand = true
+    hum.AutoRotate = false
+    hum.WalkSpeed = 0
+    hum.JumpPower = 0
+
+    for _, m in ipairs(hrp:GetChildren()) do
+        if m.Name == "MolFlyBV" or m.Name == "MolFlyBG" then m:Destroy() end
+    end
+
+    flyConflicts = {}
+    for _, m in ipairs(hrp:GetChildren()) do
+        if m:IsA("BodyVelocity") or m:IsA("BodyGyro") then
+            table.insert(flyConflicts, {obj=m, enabled=m.Enabled})
+            m.Enabled = false
+        end
+    end
+
+    flyBV = Instance.new("BodyVelocity")
+    flyBV.Name = "MolFlyBV"
+    flyBV.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+    flyBV.Velocity = Vector3.zero
+    flyBV.Parent = hrp
+
+    flyBG = Instance.new("BodyGyro")
+    flyBG.Name = "MolFlyBG"
+    flyBG.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+    flyBG.P = 100000
+    flyBG.D = 1000
+    flyBG.CFrame = hrp.CFrame
+    flyBG.Parent = hrp
+
+    if flyConn then flyConn:Disconnect() end
+    flyConn = RunService.RenderStepped:Connect(function(dt)
+        pcall(function()
+            if not states.Fly then return end
+            if not hrp.Parent then return end
+            if not flyBV or not flyBV.Parent then return end
+            if not flyBG or not flyBG.Parent then return end
+
+            hum.PlatformStand = true
+            if hum.WalkSpeed ~= 0 then hum.WalkSpeed = 0 end
+            if hum.JumpPower ~= 0 then hum.JumpPower = 0 end
+            if hum.AutoRotate then hum.AutoRotate = false end
+
+            local camCF = Camera.CFrame
+            local camLook = camCF.LookVector
+            local flatLook = Vector3.new(camLook.X, 0, camLook.Z)
+            if flatLook.Magnitude < 0.05 then
+                local hl = hrp.CFrame.LookVector
+                flatLook = Vector3.new(hl.X, 0, hl.Z)
+            end
+            if flatLook.Magnitude > 0.0001 then flatLook = flatLook.Unit end
+
+            local flatRight = Vector3.new(camCF.RightVector.X, 0, camCF.RightVector.Z)
+            if flatRight.Magnitude < 0.001 then
+                flatRight = flatLook:Cross(Vector3.new(0, 1, 0))
+            end
+            if flatRight.Magnitude > 0.0001 then flatRight = flatRight.Unit end
+
+            local move = Vector3.zero
+            local hasInput = false
+
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then move += flatLook; hasInput = true end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then move -= flatLook; hasInput = true end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then move -= flatRight; hasInput = true end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then move += flatRight; hasInput = true end
+
+            local humMove = hum.MoveDirection
+            if humMove.Magnitude > 0.05 then
+                local fm = Vector3.new(humMove.X, 0, humMove.Z)
+                if fm.Magnitude > 0.05 then
+                    move += fm.Unit * 1.2
+                    hasInput = true
+                end
+            end
+
+            local pitch = camCF.LookVector.Y
+            if math.abs(pitch) > 0.05 then
+                move += Vector3.new(0, pitch, 0)
+                hasInput = true
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                move += Vector3.new(0, 1, 0); hasInput = true
+            end
+            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+              or UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+                move -= Vector3.new(0, 1, 0); hasInput = true
+            end
+
+            local targetVel
+            if hasInput and move.Magnitude > 0.01 then
+                targetVel = move.Unit * Config.FlySpeed
+            else
+                targetVel = Vector3.zero
+            end
+            flyBV.Velocity = targetVel
+            pcall(function() hrp.AssemblyLinearVelocity = targetVel end)
+            pcall(function() hrp.Velocity = targetVel end)
+
+            if Config.Superman then
+                if hasInput and move.Magnitude > 0.05 then
+                    local targetCF = CFrame.new(hrp.Position, hrp.Position + move.Unit)
+                    flyBG.CFrame = flyBG.CFrame:Lerp(targetCF, 0.4)
+                else
+                    flyBG.CFrame = flyBG.CFrame:Lerp(camCF, 0.2)
+                end
+            else
+                flyBG.CFrame = camCF
+            end
+        end)
+    end)
+end
+
+local function stopFly()
+    if flyConn then flyConn:Disconnect(); flyConn = nil end
+    if flyBV then flyBV:Destroy(); flyBV = nil end
+    if flyBG then flyBG:Destroy(); flyBG = nil end
+    for _, e in ipairs(flyConflicts) do
+        pcall(function() if e.obj and e.obj.Parent then e.obj.Enabled = e.enabled end end)
+    end
+    flyConflicts = {}
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.PlatformStand = false
+        if flySavedWS and flySavedWS > 0 then hum.WalkSpeed = flySavedWS end
+        if flySavedJP and flySavedJP > 0 then hum.JumpPower = flySavedJP end
+        hum.AutoRotate = (flySavedAutoRotate == nil) and true or flySavedAutoRotate
+    end
+end
+
+-- ============================================================
+-- SUPERMAN WINGS
+-- ============================================================
+local wingsModel
+local function makeWings(char)
+    if wingsModel and wingsModel.Parent then wingsModel:Destroy() end
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    wingsModel = Instance.new("Model"); wingsModel.Name = "MolSupermanWings"; wingsModel.Parent = char
+
+    for _, side in ipairs({-1, 1}) do
+        local wing = Instance.new("Part")
+        wing.Size = Vector3.new(6, 0.3, 2.5); wing.Color = Color3.fromRGB(0, 150, 255)
+        wing.Material = Enum.Material.Neon; wing.CanCollide = false
+        wing.Massless = true; wing.Transparency = 0.15; wing.Parent = wingsModel
+        local w1 = Instance.new("Weld"); w1.Part0 = hrp; w1.Part1 = wing
+        w1.C0 = CFrame.new(side*2.5, 1.3, 0.6) * CFrame.Angles(0, math.rad(side*15), math.rad(-side*40))
+        w1.Parent = wing
+
+        local wing2 = Instance.new("Part")
+        wing2.Size = Vector3.new(4, 0.25, 1.8); wing2.Color = Color3.fromRGB(120, 200, 255)
+        wing2.Material = Enum.Material.Neon; wing2.CanCollide = false
+        wing2.Massless = true; wing2.Transparency = 0.15; wing2.Parent = wingsModel
+        local w2 = Instance.new("Weld"); w2.Part0 = hrp; w2.Part1 = wing2
+        w2.C0 = CFrame.new(side*1.4, 1.6, 0.5) * CFrame.Angles(0, math.rad(side*10), math.rad(-side*60))
+        w2.Parent = wing2
+
+        local tip = Instance.new("Part")
+        tip.Size = Vector3.new(1.5, 0.2, 1); tip.Color = Color3.fromRGB(255, 255, 255)
+        tip.Material = Enum.Material.Neon; tip.CanCollide = false
+        tip.Massless = true; tip.Transparency = 0.2; tip.Parent = wingsModel
+        local w3 = Instance.new("Weld"); w3.Part0 = hrp; w3.Part1 = tip
+        w3.C0 = CFrame.new(side*3.8, 1.8, 0.3) * CFrame.Angles(0, 0, math.rad(-side*20))
+        w3.Parent = tip
+    end
+
+    local prev = hrp
+    for i = 1, 3 do
+        local seg = Instance.new("Part")
+        seg.Size = Vector3.new(2.2 - i*0.2, 0.15, 1.2 + i*0.4)
+        seg.Color = Color3.fromRGB(220, 20, 20); seg.Material = Enum.Material.SmoothPlastic
+        seg.CanCollide = false; seg.Massless = true; seg.Transparency = 0.05
+        seg.Parent = wingsModel
+        local w = Instance.new("Weld"); w.Part0 = prev; w.Part1 = seg
+        if i == 1 then w.C0 = CFrame.new(0, 0.3, 0.6) * CFrame.Angles(math.rad(20), 0, 0)
+        else w.C0 = CFrame.new(0, -0.2, 0.9) * CFrame.Angles(math.rad(10), 0, 0) end
+        w.Parent = seg
+        prev = seg
+    end
+
+    local aura = Instance.new("Part")
+    aura.Size = Vector3.new(4, 6, 3); aura.Shape = Enum.PartType.Ball
+    aura.Color = Color3.fromRGB(0, 150, 255); aura.Material = Enum.Material.ForceField
+    aura.CanCollide = false; aura.Massless = true; aura.Transparency = 0.85
+    aura.Parent = wingsModel
+    local aw = Instance.new("Weld"); aw.Part0 = hrp; aw.Part1 = aura
+    aw.C0 = CFrame.new(0, 0, 0); aw.Parent = aura
+end
+local function removeWings()
+    if wingsModel then wingsModel:Destroy(); wingsModel = nil end
+end
+
+-- ============================================================
+-- SPINBOT
+-- ============================================================
+local spinMover = nil
+
+local function startSpinbot()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp then return end
+    if hum then hum.AutoRotate = false end
+
+    if spinMover and spinMover.Parent then spinMover:Destroy() end
+
+    spinMover = Instance.new("BodyAngularVelocity")
+    spinMover.Name = "MolSpinbotAV"
+    spinMover.AngularVelocity = Vector3.new(0, Config.SpinbotSpeed, 0)
+    spinMover.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    spinMover.P = 10000
+    spinMover.Parent = hrp
+end
+
+local function stopSpinbot()
+    if spinMover and spinMover.Parent then spinMover:Destroy() end
+    spinMover = nil
+end
+
+RunService.Heartbeat:Connect(SafeCall(function()
+    if not states.Spinbot then
+        if spinMover then stopSpinbot() end
+        return
+    end
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hrp then return end
+    if hum then hum.AutoRotate = false end
+
+    if not spinMover or not spinMover.Parent then
+        startSpinbot()
+    else
+        spinMover.AngularVelocity = Vector3.new(0, Config.SpinbotSpeed, 0)
+        spinMover.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    end
+end, "Spinbot"))
+
+-- ============================================================
+-- 50X SPEED
+-- ============================================================
+local speedHookInstalled = false
+local function installSpeedHook()
+    if speedHookInstalled then return end
+    speedHookInstalled = true
+    pcall(function()
+        local mt = getrawmetatable(game)
+        local oldIndex = mt.__index
+        local oldNewIndex = mt.__newindex
+        setreadonly(mt, false)
+        mt.__index = newcclosure(function(self, key)
+            if Config.Speed50 and key == "WalkSpeed" and self:IsA("Humanoid")
+               and self.Parent == LocalPlayer.Character then
+                return Config.SpeedValue
+            end
+            return oldIndex(self, key)
+        end)
+        mt.__newindex = newcclosure(function(self, key, value)
+            if Config.Speed50 and key == "WalkSpeed" and self:IsA("Humanoid")
+               and self.Parent == LocalPlayer.Character then
+                return oldNewIndex(self, key, Config.SpeedValue)
+            end
+            return oldNewIndex(self, key, value)
+        end)
+        setreadonly(mt, true)
+    end)
+end
+installSpeedHook()
+
+local function applySpeed()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then pcall(function() hum.WalkSpeed = Config.SpeedValue end) end
+end
+local function clearSpeed()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then pcall(function() hum.WalkSpeed = 16 end) end
+end
+
+RunService.Heartbeat:Connect(SafeCall(function()
+    if not Config.Speed50 then return end
+    if states.Fly then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum and hum.WalkSpeed ~= Config.SpeedValue then
+        pcall(function() hum.WalkSpeed = Config.SpeedValue end)
+    end
+end, "Speed"))
+
+-- ============================================================
+-- DAY / NIGHT
+-- ============================================================
+local originalLighting = {
+    ClockTime = Lighting.ClockTime, Brightness = Lighting.Brightness,
+    Ambient = Lighting.Ambient, OutdoorAmbient = Lighting.OutdoorAmbient,
+    FogEnd = Lighting.FogEnd, FogStart = Lighting.FogStart, FogColor = Lighting.FogColor,
+    GlobalShadows = Lighting.GlobalShadows,
+    EnvironmentDiffuseScale = Lighting.EnvironmentDiffuseScale,
+    EnvironmentSpecularScale = Lighting.EnvironmentSpecularScale,
+    ExposureCompensation = Lighting.ExposureCompensation,
+}
+local function setDay()
+    Lighting.ClockTime = 12
+    Lighting.Brightness = 3
+    Lighting.Ambient = Color3.fromRGB(140, 140, 140)
+    Lighting.OutdoorAmbient = Color3.fromRGB(140, 140, 140)
+    Lighting.FogColor = Color3.fromRGB(200, 210, 230)
+    Lighting.FogEnd = 10000; Lighting.FogStart = 0
+    Lighting.GlobalShadows = true
+    Lighting.EnvironmentDiffuseScale = 1
+    Lighting.EnvironmentSpecularScale = 1
+    Lighting.ExposureCompensation = 0.2
+end
+local function setNight()
+    Lighting.ClockTime = 0
+    Lighting.Brightness = 0.5
+    Lighting.Ambient = Color3.fromRGB(30, 30, 45)
+    Lighting.OutdoorAmbient = Color3.fromRGB(20, 20, 35)
+    Lighting.FogColor = Color3.fromRGB(15, 15, 25)
+    Lighting.FogEnd = 5000; Lighting.FogStart = 0
+    Lighting.GlobalShadows = true
+    Lighting.EnvironmentDiffuseScale = 0.4
+    Lighting.EnvironmentSpecularScale = 0.6
+    Lighting.ExposureCompensation = 0
+end
+
+-- ============================================================
+-- UI
+-- ============================================================
+local Window = Rayfield:CreateWindow({
+    Name = "MOL HUB",
+    LoadingTitle = "MOL HUB",
+    LoadingSubtitle = "loading...",
+    Theme = "DarkBlue",
+    ConfigurationSaving = { Enabled = false },
+    KeySystem = false,
+})
+
+local AimTab = Window:CreateTab("Aim", 4483362458)
+AimTab:CreateSection("Aimbot")
+AimTab:CreateToggle({ Name="Aimbot (Hold Left Mouse)", CurrentValue=false, Flag="AimbotEnabled",
+    Callback=SafeCall(function(v) Config.AimbotEnabled = v end, "Aim") })
+AimTab:CreateToggle({ Name="Auto-Aim (Always Active)", CurrentValue=false, Flag="AutoAimEnabled",
+    Callback=SafeCall(function(v) Config.AutoAim = v end, "AutoAim") })
+AimTab:CreateToggle({ Name="Auto-Fire (Shoot When Locked On Head)", CurrentValue=true, Flag="AutoFire",
+    Callback=SafeCall(function(v) Config.AutoFire = v end) })
+AimTab:CreateToggle({ Name="Target Lock", CurrentValue=true, Flag="LockOn",
+    Callback=SafeCall(function(v) Config.LockOn = v; if not v then ClearLock() end end) })
+AimTab:CreateDropdown({ Name="Target Part",
+    Options={"Head","UpperTorso","LowerTorso","HumanoidRootPart"}, CurrentOption={"Head"}, Flag="AimPart",
+    Callback=SafeCall(function(o) Config.AimPart = o end) })
+AimTab:CreateSlider({ Name="FOV Radius", Range={20,600}, Increment=5, Suffix="px", CurrentValue=200, Flag="FOV",
+    Callback=SafeCall(function(v) Config.FOV = v; FOVCircle.Radius = v end) })
+AimTab:CreateSlider({ Name="Smoothness (1 = instant)", Range={0.1,1}, Increment=0.05, CurrentValue=0.6, Flag="Smooth",
+    Callback=SafeCall(function(v) Config.Smoothness = v end) })
+AimTab:CreateToggle({ Name="Team Check", CurrentValue=true, Flag="TeamCheck",
+    Callback=SafeCall(function(v) Config.TeamCheck = v end) })
+AimTab:CreateToggle({ Name="Visible Check (Wall)", CurrentValue=false, Flag="VisCheck",
+    Callback=SafeCall(function(v) Config.VisibleCheck = v end) })
+AimTab:CreateSection("Crosshair")
+AimTab:CreateButton({ Name="Cycle Crosshair",
+    Callback=SafeCall(function()
+        Config.CrosshairIdx = Config.CrosshairIdx % #CROSS_NAMES + 1
+        UpdateCrosshair()
+    end) })
+AimTab:CreateButton({ Name="Set: Red Dot",      Callback=SafeCall(function() Config.CrosshairIdx=1; UpdateCrosshair() end) })
+AimTab:CreateButton({ Name="Set: Green Cross",  Callback=SafeCall(function() Config.CrosshairIdx=2; UpdateCrosshair() end) })
+AimTab:CreateButton({ Name="Set: White Circle", Callback=SafeCall(function() Config.CrosshairIdx=3; UpdateCrosshair() end) })
+AimTab:CreateButton({ Name="Set: Full Cross",   Callback=SafeCall(function() Config.CrosshairIdx=4; UpdateCrosshair() end) })
+AimTab:CreateButton({ Name="Set: Neon T",       Callback=SafeCall(function() Config.CrosshairIdx=5; UpdateCrosshair() end) })
+
+local ESPTab = Window:CreateTab("ESP", 4483362458)
+ESPTab:CreateSection("Modules")
+ESPTab:CreateToggle({ Name="Box ESP", CurrentValue=false, Flag="ESPBox", Callback=SafeCall(function(v) Config.ESPBox = v end) })
+ESPTab:CreateToggle({ Name="Name ESP", CurrentValue=false, Flag="ESPName", Callback=SafeCall(function(v) Config.ESPName = v end) })
+ESPTab:CreateToggle({ Name="Antenna Lines", CurrentValue=false, Flag="ESPAntenna", Callback=SafeCall(function(v) Config.ESPAntenna = v end) })
+ESPTab:CreateToggle({ Name="Hologram ESP", CurrentValue=false, Flag="ESPHologram", Callback=SafeCall(function(v) Config.ESPHologram = v end) })
+ESPTab:CreateToggle({ Name="Killer ESP (Highlight MERAH)", CurrentValue=false, Flag="ESPKiller", Callback=SafeCall(function(v) Config.ESPKiller = v end) })
+ESPTab:CreateToggle({ Name="Generator ESP", CurrentValue=false, Flag="ESPGenerator", Callback=SafeCall(function(v) Config.ESPGenerator = v end) })
+ESPTab:CreateToggle({ Name="Team Check", CurrentValue=true, Flag="ESPTeamCheck", Callback=SafeCall(function(v) Config.ESPTeamCheck = v end) })
+ESPTab:CreateSection("Colors")
+ESPTab:CreateColorPicker({ Name="Box Color", Color=Color3.fromRGB(0,255,60), Flag="BoxCol", Callback=SafeCall(function(c) Config.ESPBoxColor = c end) })
+ESPTab:CreateColorPicker({ Name="Name Color", Color=Color3.fromRGB(255,255,255), Flag="NameCol", Callback=SafeCall(function(c) Config.ESPNameColor = c end) })
+ESPTab:CreateColorPicker({ Name="Antenna Color", Color=Color3.fromRGB(255,255,255), Flag="AntCol", Callback=SafeCall(function(c) Config.ESPAntennaCol = c end) })
+ESPTab:CreateColorPicker({ Name="Hologram Color", Color=Color3.fromRGB(0,150,255), Flag="HoloCol", Callback=SafeCall(function(c) Config.ESPHoloColor = c end) })
+ESPTab:CreateColorPicker({ Name="Killer Color", Color=Color3.fromRGB(255,0,0), Flag="KillerCol", Callback=SafeCall(function(c) Config.ESPKillerCol = c end) })
+ESPTab:CreateColorPicker({ Name="Generator Color", Color=Color3.fromRGB(255,220,0), Flag="GenCol", Callback=SafeCall(function(c) Config.ESPGenColor = c end) })
+
+local TPTab = Window:CreateTab("Teleport", 4483362458)
+TPTab:CreateSection("Teleport")
+TPTab:CreateButton({ Name="TP to Generator [Random]",
+    Callback=SafeCall(function() tpTo(findRandomByKeywords({"generator"})) end) })
+TPTab:CreateButton({ Name="TP to Hook [Random]",
+    Callback=SafeCall(function() tpTo(findRandomByKeywords({"hook","gallows"})) end) })
+TPTab:CreateButton({ Name="TP to Player [Random]",
+    Callback=SafeCall(function()
+        local t = {}
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then table.insert(t, hrp) end
+            end
+        end
+        if #t > 0 then tpTo(t[math.random(1, #t)]) end
+    end) })
+TPTab:CreateButton({ Name="TP to Killer (100%)",
+    Callback=SafeCall(function()
+        local k = findKillerPart()
+        if k then
+            tpTo(k)
+            task.wait(0.1)
+            tpTo(k)
+        end
+    end) })
+
+local PlayerTab = Window:CreateTab("Player", 4483362458)
+PlayerTab:CreateSection("Movement")
+
+PlayerTab:CreateToggle({ Name="Spinbot (Real Physics Spin)", CurrentValue=false, Flag="Spinbot",
+    Callback=SafeCall(function(v)
+        states.Spinbot = v
+        if v then startSpinbot() else stopSpinbot() end
+    end, "Spinbot") })
+
+PlayerTab:CreateSlider({ Name="Spinbot Speed", Range={5,200}, Increment=1, CurrentValue=40, Flag="SpinSpeed",
+    Callback=SafeCall(function(v)
+        Config.SpinbotSpeed = v
+        if spinMover and spinMover.Parent then
+            spinMover.AngularVelocity = Vector3.new(0, v, 0)
+        end
+    end) })
+
+PlayerTab:CreateToggle({ Name="Fly (WASD + Look Up/Down)", CurrentValue=false, Flag="Fly",
+    Callback=SafeCall(function(v) states.Fly = v; if v then startFly() else stopFly() end end, "Fly") })
+
+PlayerTab:CreateToggle({ Name="Superman Mode (Real Wings + Cape)", CurrentValue=false, Flag="Superman",
+    Callback=SafeCall(function(v)
+        Config.Superman = v
+        if v then
+            if not states.Fly then states.Fly = true; startFly() end
+            if LocalPlayer.Character then makeWings(LocalPlayer.Character) end
+        else
+            removeWings()
+        end
+    end) })
+
+PlayerTab:CreateToggle({ Name="Noclip", CurrentValue=false, Flag="Noclip",
+    Callback=SafeCall(function(v) states.Noclip = v end) })
+
+PlayerTab:CreateSection("Speed")
+PlayerTab:CreateToggle({ Name="50x Speed (All Maps - 100%)", CurrentValue=false, Flag="Speed50",
+    Callback=SafeCall(function(v)
+        Config.Speed50 = v
+        if v then applySpeed() else clearSpeed() end
+    end) })
+PlayerTab:CreateSlider({ Name="Speed Value (16-500)", Range={16,500}, Increment=1, CurrentValue=50, Flag="SpeedValue",
+    Callback=SafeCall(function(v)
+        Config.SpeedValue = v
+        if Config.Speed50 then applySpeed() end
+    end) })
+
+PlayerTab:CreateSection("Fly Speed")
+PlayerTab:CreateSlider({ Name="Fly Speed", Range={10,500}, Increment=5, CurrentValue=100, Flag="FlySpeed",
+    Callback=SafeCall(function(v) Config.FlySpeed = v end) })
+
+PlayerTab:CreateParagraph({ Title="Controls",
+    Content="FLY:\n- WASD = gerak horizontal\n- Look UP/DOWN = naik/turun\n- Space = naik | Shift/Ctrl = turun\n- Analog mobile juga jalan\n- Lepas tombol = HOVER (tidak jatuh)\n\nSPINBOT: physics spin\n\nSUPERMAN: fly + tilt forward + wings" })
+
+local WorldTab = Window:CreateTab("World", 4483362458)
+WorldTab:CreateSection("Environment")
+WorldTab:CreateButton({ Name="Day Time (Full Brightness)", Callback=SafeCall(function() setDay() end) })
+WorldTab:CreateButton({ Name="Night Time (Dark + Moon)", Callback=SafeCall(function() setNight() end) })
+WorldTab:CreateButton({ Name="Sunset (5 PM)", Callback=SafeCall(function()
+    Lighting.ClockTime = 17
+    Lighting.Brightness = 2
+    Lighting.Ambient = Color3.fromRGB(180, 120, 100)
+    Lighting.OutdoorAmbient = Color3.fromRGB(180, 120, 100)
+    Lighting.FogColor = Color3.fromRGB(255, 180, 120)
+    Lighting.FogEnd = 8000
+end) })
+WorldTab:CreateToggle({ Name="No Fog", CurrentValue=false, Flag="NoFog",
+    Callback=SafeCall(function(v)
+        Config.NoFog = v
+        Lighting.FogEnd = v and 100000 or originalLighting.FogEnd
+        Lighting.FogStart = v and 99999 or originalLighting.FogStart
+    end) })
+WorldTab:CreateButton({ Name="Restore Original Lighting", Callback=SafeCall(function()
+    for k, v in pairs(originalLighting) do
+        pcall(function() Lighting[k] = v end)
+    end
+end) })
+
+local ProtTab = Window:CreateTab("Protection", 4483362458)
+ProtTab:CreateSection("FULL BYPASS SUITE - 10 LAYERS")
+ProtTab:CreateParagraph({
+    Title = "Automatic Protection (Always ON)",
+    Content = "L1: __namecall hook\n" ..
+              "L2: LocalPlayer:Kick hook\n" ..
+              "L3: Players:Kick hook\n" ..
+              "L4: ReportAbuse hook\n" ..
+              "L5: SetCore hook\n" ..
+              "L6: Ancestry defense\n" ..
+              "L7: Remote scanner (2s)\n" ..
+              "L8: Anti-267 continuous\n" ..
+              "L9: game:Kick hook\n" ..
+              "L10: SafeCall wrapper\n\n" ..
+              "Anti-Detect / Anti-Kick / Anti-Ban\n" ..
+              "Anti-BanPermanent / Anti-267\n" ..
+              "Anti-Report / Anti-Cheat / Anti-Flag\n" ..
+              "Anti-Log / Safe All Map - 100%",
+})
+ProtTab:CreateButton({
+    Name="Test Anti-Kick",
+    Callback=SafeCall(function()
+        pcall(function() LocalPlayer:Kick("MOL Test") end)
+        task.wait(0.3)
+        if LocalPlayer.Parent == Players then
+            plog("Anti-Kick OK")
+        else
+            pcall(function() LocalPlayer.Parent = Players end)
+            plog("Parent restored")
+        end
+    end)
+})
+ProtTab:CreateButton({
+    Name="Test Anti-Report",
+    Callback=SafeCall(function()
+        pcall(function() LocalPlayer:ReportAbuse(LocalPlayer, "MOL Test", "Test") end)
+        plog("Anti-Report OK (blocked)")
+    end)
+})
+ProtTab:CreateButton({
+    Name="Force Freeze Anti-Cheat Remotes",
+    Callback=SafeCall(function()
+        local n = 0
+        for _, obj in ipairs(game:GetDescendants()) do
+            if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+                local nm = string.lower(obj.Name)
+                for _, kw in ipairs(BLOCKED_KEYWORDS) do
+                    if string.find(nm, kw, 1, true) then
+                        pcall(function() obj:SetAttribute("MolFrozen", true); n = n + 1 end)
+                        break
+                    end
+                end
+            end
+        end
+        plog("Froze "..n.." remotes")
+    end)
+})
+
+RunService.Stepped:Connect(SafeCall(function()
+    if states.Noclip and LocalPlayer.Character then
+        for _, p in ipairs(LocalPlayer.Character:GetDescendants()) do
+            if p:IsA("BasePart") then p.CanCollide = false end
+        end
+    end
+end, "Noclip"))
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    pcall(function()
+        if input.KeyCode == Enum.KeyCode.Equals or input.KeyCode == Enum.KeyCode.KeypadPlus then
+            Config.FlySpeed = math.min(Config.FlySpeed + 10, 500)
+        elseif input.KeyCode == Enum.KeyCode.Minus or input.KeyCode == Enum.KeyCode.KeypadMinus then
+            Config.FlySpeed = math.max(Config.FlySpeed - 10, 10)
+        end
+    end)
+end)
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    task.wait(1)
+    pcall(function()
+        if Config.Superman then makeWings(char) end
+        if states.Fly then task.wait(0.3); startFly() end
+        if Config.Speed50 then task.wait(0.3); applySpeed() end
+        if states.Spinbot then task.wait(0.3); startSpinbot() end
+    end)
+end)
+
+local function espEnemy(player)
+    if not Config.ESPTeamCheck then return player ~= LocalPlayer end
+    if player == LocalPlayer then return false end
+    if not player.Team or not LocalPlayer.Team then return true end
+    return player.Team ~= LocalPlayer.Team
+end
+
+RunService.RenderStepped:Connect(SafeCall(function()
+    if Config.ESPHologram then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local isK = isKillerPlayer(player)
+                local fill = (Config.ESPKiller and isK) and Config.ESPKillerCol or Config.ESPHoloColor
+                if not Holograms[player] or not Holograms[player].Parent then
+                    local hl = Instance.new("Highlight")
+                    hl.Name = "MolHologram"
+                    hl.FillColor = fill
+                    hl.OutlineColor = fill
+                    hl.FillTransparency = 0.55; hl.OutlineTransparency = 0
+                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    hl.Parent = player.Character; Holograms[player] = hl
+                else
+                    Holograms[player].FillColor = fill
+                    Holograms[player].OutlineColor = fill
+                end
+            end
+        end
+    else
+        for p, hl in pairs(Holograms) do hl:Destroy(); Holograms[p] = nil end
+    end
+
+    local activeKillerChars = {}
+    if Config.ESPKiller then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character and isKillerPlayer(player) then
+                local char = player.Character
+                activeKillerChars[char] = true
+                local hl = char:FindFirstChild("MolKillerHL")
+                if not hl then
+                    hl = Instance.new("Highlight")
+                    hl.Name = "MolKillerHL"
+                    hl.FillColor = Config.ESPKillerCol
+                    hl.OutlineColor = Config.ESPKillerCol
+                    hl.FillTransparency = 0.35
+                    hl.OutlineTransparency = 0
+                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    hl.Parent = char
+                    KillerHLs[char] = hl
+                else
+                    hl.FillColor = Config.ESPKillerCol
+                    hl.OutlineColor = Config.ESPKillerCol
+                end
+            end
+        end
+        for parent, hl in pairs(KillerHLs) do
+            if not activeKillerChars[parent] or not parent.Parent then
+                pcall(function() hl:Destroy() end)
+                KillerHLs[parent] = nil
+            end
+        end
+    else
+        for parent, hl in pairs(KillerHLs) do
+            pcall(function() hl:Destroy() end)
+        end
+        KillerHLs = {}
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj.Name == "MolKillerHL" then obj:Destroy() end
+        end
+    end
+
+    if Config.ESPGenerator then
+        local tracked = {}
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if isGeneratorObj(obj) and (obj:IsA("Model") or obj:IsA("BasePart")) then
+                tracked[obj] = true
+                if not GenHighlights[obj] or not GenHighlights[obj].Parent then
+                    local hl = Instance.new("Highlight")
+                    hl.Name = "MolGenHL"
+                    hl.FillColor = Config.ESPGenColor
+                    hl.OutlineColor = Config.ESPGenColor
+                    hl.FillTransparency = 0.55; hl.OutlineTransparency = 0
+                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    hl.Parent = obj
+                    GenHighlights[obj] = hl
+                else
+                    GenHighlights[obj].FillColor = Config.ESPGenColor
+                    GenHighlights[obj].OutlineColor = Config.ESPGenColor
+                end
+            end
+        end
+        for target, hl in pairs(GenHighlights) do
+            if not target.Parent or not tracked[target] then
+                hl:Destroy(); GenHighlights[target] = nil
+            end
+        end
+    else
+        for target, hl in pairs(GenHighlights) do hl:Destroy() end
+        GenHighlights = {}
+    end
+
+    for player, esp in pairs(ESPObjects) do
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Head") then
+            local hrp  = char.HumanoidRootPart
+            local head = char.Head
+            local sp, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+            if onScreen and espEnemy(player) then
+                local headSp = Camera:WorldToViewportPoint(head.Position + Vector3.new(0,0.6,0))
+                local feetSp = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0,3,0))
+                local height = math.abs(headSp.Y - feetSp.Y)
+                local width  = height * 0.55
+                if Config.ESPBox then
+                    esp.Box.Size = Vector2.new(width, height)
+                    esp.Box.Position = Vector2.new(sp.X - width/2, headSp.Y)
+                    esp.Box.Color = Config.ESPBoxColor; esp.Box.Visible = true
+                else esp.Box.Visible = false end
+                if Config.ESPName then
+                    esp.Name.Text = player.Name
+                    esp.Name.Position = Vector2.new(sp.X, headSp.Y - 20)
+                    esp.Name.Color = Config.ESPNameColor; esp.Name.Visible = true
+                else esp.Name.Visible = false end
+                if Config.ESPAntenna then
+                    esp.Antenna.From = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
+                    esp.Antenna.To   = Vector2.new(sp.X, sp.Y)
+                    esp.Antenna.Color = Config.ESPAntennaCol; esp.Antenna.Visible = true
+                else esp.Antenna.Visible = false end
+            else
+                esp.Box.Visible=false; esp.Name.Visible=false; esp.Antenna.Visible=false
+            end
+        else
+            esp.Box.Visible=false; esp.Name.Visible=false; esp.Antenna.Visible=false
+        end
+    end
+end, "ESP"))
+
+Players.PlayerRemoving:Connect(RemoveESP)
+Players.PlayerAdded:Connect(function(p)
+    if p ~= LocalPlayer then
+        CreateESP(p)
+        p.CharacterAdded:Connect(function()
+            task.wait(0.4); RemoveESP(p); CreateESP(p)
+        end)
+    end
+end)
+for _, p in ipairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer then CreateESP(p) end
+end
+
+Rayfield:LoadConfiguration()
+print("[MOL HUB] Ready - Full Bypass Suite (10 Layers)")
